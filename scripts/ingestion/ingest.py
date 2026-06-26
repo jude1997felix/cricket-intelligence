@@ -43,6 +43,12 @@ COMPETITION_CONFIG: dict[str, dict] = {
         'db_value': 'IPL',
         'weight_as': 'primary',       # primary = counts toward ipl_game_count
     },
+    'SMAT': {
+        'url': 'https://cricsheet.org/downloads/sma.zip',
+        'label': 'Syed Mushtaq Ali Trophy (695 matches)',
+        'db_value': 'SMAT',
+        'weight_as': 'domestic',
+    },
     'T20I': {
         'url': 'https://cricsheet.org/downloads/t20s_male.zip',
         'label': 'T20 Internationals (men)',
@@ -348,10 +354,10 @@ def main():
 
     targets = [args.competition] if args.competition else list(COMPETITION_CONFIG.keys())
 
-    # Default: IPL + men's T20Is (supplement for grounds with fewer IPL games)
+    # Default: IPL + SMAT (domestic supplement for low-IPL-game venues) + T20I
     if not args.competition:
-        targets = ['IPL', 'T20I']
-        print('Running default scope: IPL + T20I (pass --competition to override)')
+        targets = ['IPL', 'SMAT', 'T20I']
+        print('Running default scope: IPL + SMAT + T20I (pass --competition to override)')
 
     for key in targets:
         run_competition(key)
