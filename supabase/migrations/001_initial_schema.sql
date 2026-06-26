@@ -1,5 +1,5 @@
 -- Enums
-create type competition_type as enum ('IPL', 'SMAT', 'OTHER');
+create type competition_type as enum ('IPL', 'T20I', 'OTHER');
 create type phase_type as enum ('POWERPLAY', 'MIDDLE', 'DEATH');
 create type pitch_type as enum ('FLAT', 'SPORTING', 'SPIN_FRIENDLY', 'SEAM_FRIENDLY', 'SLOW_LOW');
 create type batting_style as enum ('RIGHT_HAND', 'LEFT_HAND');

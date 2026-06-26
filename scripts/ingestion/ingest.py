@@ -38,50 +38,44 @@ sb: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # Add new competitions here as scope expands. order matters for display only.
 COMPETITION_CONFIG: dict[str, dict] = {
     'IPL': {
-        'url': 'https://cricsheet.org/downloads/ipl_male_yaml.zip',
+        'url': 'https://cricsheet.org/downloads/ipl_male.zip',
         'label': 'Indian Premier League (men)',
         'db_value': 'IPL',
         'weight_as': 'primary',       # primary = counts toward ipl_game_count
     },
-    'SMAT': {
-        'url': 'https://cricsheet.org/downloads/smat_male_yaml.zip',
-        'label': 'Syed Mushtaq Ali Trophy (men)',
-        'db_value': 'SMAT',
-        'weight_as': 'domestic',
-    },
     'T20I': {
-        'url': 'https://cricsheet.org/downloads/t20s_male_yaml.zip',
+        'url': 'https://cricsheet.org/downloads/t20s_male.zip',
         'label': 'T20 Internationals (men)',
         'db_value': 'T20I',
         'weight_as': 'domestic',
     },
     'T20I_W': {
-        'url': 'https://cricsheet.org/downloads/t20s_female_yaml.zip',
+        'url': 'https://cricsheet.org/downloads/t20s_female.zip',
         'label': 'T20 Internationals (women)',
-        'db_value': 'T20I',
+        'db_value': 'OTHER',
         'weight_as': 'domestic',
     },
     'BBL': {
-        'url': 'https://cricsheet.org/downloads/bbl_male_yaml.zip',
+        'url': 'https://cricsheet.org/downloads/bbl_male.zip',
         'label': 'Big Bash League (men)',
         'db_value': 'OTHER',
         'weight_as': 'domestic',
     },
     'PSL': {
-        'url': 'https://cricsheet.org/downloads/psl_male_yaml.zip',
+        'url': 'https://cricsheet.org/downloads/psl_male.zip',
         'label': 'Pakistan Super League (men)',
         'db_value': 'OTHER',
         'weight_as': 'domestic',
     },
     'CPL': {
-        'url': 'https://cricsheet.org/downloads/cpl_male_yaml.zip',
+        'url': 'https://cricsheet.org/downloads/cpl_male.zip',
         'label': 'Caribbean Premier League (men)',
         'db_value': 'OTHER',
         'weight_as': 'domestic',
     },
-    'SA20': {
-        'url': 'https://cricsheet.org/downloads/sa20_male_yaml.zip',
-        'label': 'SA20 (men)',
+    'WPL': {
+        'url': 'https://cricsheet.org/downloads/wpl_female.zip',
+        'label': "Women's Premier League",
         'db_value': 'OTHER',
         'weight_as': 'domestic',
     },
@@ -354,10 +348,10 @@ def main():
 
     targets = [args.competition] if args.competition else list(COMPETITION_CONFIG.keys())
 
-    # Default: only IPL + SMAT until scope is expanded
+    # Default: IPL + men's T20Is (supplement for grounds with fewer IPL games)
     if not args.competition:
-        targets = ['IPL', 'SMAT']
-        print('Running default scope: IPL + SMAT (pass --competition to override)')
+        targets = ['IPL', 'T20I']
+        print('Running default scope: IPL + T20I (pass --competition to override)')
 
     for key in targets:
         run_competition(key)

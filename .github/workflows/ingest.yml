@@ -13,13 +13,12 @@ on:
         options:
           - ''
           - IPL
-          - SMAT
           - T20I
           - T20I_W
           - BBL
           - PSL
           - CPL
-          - SA20
+          - WPL
 
 jobs:
   ingest:
