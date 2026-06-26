@@ -259,15 +259,29 @@ def ingest_file(path: str, match_file_id: str, competition: str, weight_as: str,
         innings_num = innings_idx + 1
         key = list(innings_data.keys())[0]
         team_data = innings_data.get(key, {})
-        overs = team_data.get('overs', [])
 
         total_runs = 0
         total_wickets = 0
 
-        for over_data in overs:
-            over_num = over_data.get('over', 0)
-            for ball_idx, delivery in enumerate(over_data.get('deliveries', [])):
-                batter_name = delivery.get('batter', '')
+        # Cricsheet has two formats:
+        # NEW (post ~2017): innings key is '1st innings'/'2nd innings',
+        #   deliveries is a flat list of {over.ball: {...}} dicts
+        # OLD: innings key is team name, overs is a list of {over: N, deliveries: [...]}
+        raw_deliveries = team_data.get('deliveries', [])
+        raw_overs = team_data.get('overs', [])
+
+        if raw_deliveries:
+            # New format — flat delivery list keyed by "over.ball"
+            for delivery_entry in raw_deliveries:
+                ball_key = list(delivery_entry.keys())[0]   # e.g. "0.1", "1.5"
+                delivery = delivery_entry[ball_key]
+
+                try:
+                    over_num, ball_num = [int(float(x)) for x in str(ball_key).split('.')]
+                except Exception:
+                    over_num, ball_num = 0, 0
+
+                batter_name = delivery.get('batsman', delivery.get('batter', ''))
                 bowler_name = delivery.get('bowler', '')
                 non_striker = delivery.get('non_striker', '')
 
@@ -277,11 +291,15 @@ def ingest_file(path: str, match_file_id: str, competition: str, weight_as: str,
                     continue
 
                 runs = delivery.get('runs', {})
-                wicket_info = delivery.get('wickets', [])
-                is_wicket = len(wicket_info) > 0
-                dismissed = wicket_info[0].get('player_out') if is_wicket else None
+                runs_batter = runs.get('batsman', runs.get('batter', 0))
+                runs_total = runs.get('total', 0)
 
-                total_runs += runs.get('total', 0)
+                # New format: 'wicket' is a dict; old format: 'wickets' is a list
+                wicket_info = delivery.get('wicket', delivery.get('wickets', [None])[0] if delivery.get('wickets') else None)
+                is_wicket = wicket_info is not None
+                dismissed = wicket_info.get('player_out') if is_wicket else None
+
+                total_runs += runs_total
                 if is_wicket:
                     total_wickets += 1
 
@@ -289,18 +307,58 @@ def ingest_file(path: str, match_file_id: str, competition: str, weight_as: str,
                     'match_id': match_id,
                     'innings': innings_num,
                     'over_num': over_num,
-                    'ball_num': ball_idx + 1,
+                    'ball_num': ball_num,
                     'batter_id': batter_id,
                     'non_striker_id': player_registry.get(non_striker),
                     'bowler_id': bowler_id,
-                    'runs_batter': runs.get('batter', 0),
+                    'runs_batter': runs_batter,
                     'runs_extras': runs.get('extras', 0),
-                    'runs_total': runs.get('total', 0),
+                    'runs_total': runs_total,
                     'is_wicket': is_wicket,
-                    'wicket_type': wicket_info[0].get('kind') if is_wicket else None,
+                    'wicket_type': wicket_info.get('kind') if is_wicket else None,
                     'dismissed_player_id': player_registry.get(dismissed) if dismissed else None,
                     'phase': phase_for_over(over_num),
                 })
+
+        elif raw_overs:
+            # Old format — overs list with nested deliveries
+            for over_data in raw_overs:
+                over_num = over_data.get('over', 0)
+                for ball_idx, delivery in enumerate(over_data.get('deliveries', [])):
+                    batter_name = delivery.get('batter', delivery.get('batsman', ''))
+                    bowler_name = delivery.get('bowler', '')
+                    non_striker = delivery.get('non_striker', '')
+
+                    batter_id = player_registry.get(batter_name)
+                    bowler_id = player_registry.get(bowler_name)
+                    if not batter_id or not bowler_id:
+                        continue
+
+                    runs = delivery.get('runs', {})
+                    wicket_list = delivery.get('wickets', [])
+                    is_wicket = len(wicket_list) > 0
+                    dismissed = wicket_list[0].get('player_out') if is_wicket else None
+
+                    total_runs += runs.get('total', 0)
+                    if is_wicket:
+                        total_wickets += 1
+
+                    deliveries_batch.append({
+                        'match_id': match_id,
+                        'innings': innings_num,
+                        'over_num': over_num,
+                        'ball_num': ball_idx + 1,
+                        'batter_id': batter_id,
+                        'non_striker_id': player_registry.get(non_striker),
+                        'bowler_id': bowler_id,
+                        'runs_batter': runs.get('batter', runs.get('batsman', 0)),
+                        'runs_extras': runs.get('extras', 0),
+                        'runs_total': runs.get('total', 0),
+                        'is_wicket': is_wicket,
+                        'wicket_type': wicket_list[0].get('kind') if is_wicket else None,
+                        'dismissed_player_id': player_registry.get(dismissed) if dismissed else None,
+                        'phase': phase_for_over(over_num),
+                    })
 
         score_col = 'team1_score' if innings_num == 1 else 'team2_score'
         wkt_col = 'team1_wickets' if innings_num == 1 else 'team2_wickets'
