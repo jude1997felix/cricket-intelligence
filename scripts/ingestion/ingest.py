@@ -178,7 +178,7 @@ def bump_venue_count(venue_id: str, weight_as: str):
 
 _player_cache: dict[str, str] = {}
 
-def upsert_player(name: str) -> str:
+def upsert_player(name: str, cricsheet_identifier: str | None = None) -> str:
     key = name.lower().replace(' ', '_')
     if key in _player_cache:
         return _player_cache[key]
@@ -186,8 +186,15 @@ def upsert_player(name: str) -> str:
     existing = sb.table('players').select('player_id').eq('cricsheet_key', key).execute()
     if existing.data:
         pid = existing.data[0]['player_id']
+        # Backfill identifier if we have it and it wasn't stored before
+        if cricsheet_identifier:
+            sb.table('players').update({'cricsheet_identifier': cricsheet_identifier}) \
+                .eq('player_id', pid).is_('cricsheet_identifier', 'null').execute()
     else:
-        res = sb.table('players').insert({'name': name, 'cricsheet_key': key}).execute()
+        row = {'name': name, 'cricsheet_key': key}
+        if cricsheet_identifier:
+            row['cricsheet_identifier'] = cricsheet_identifier
+        res = sb.table('players').insert(row).execute()
         pid = res.data[0]['player_id']
 
     _player_cache[key] = pid
@@ -195,10 +202,13 @@ def upsert_player(name: str) -> str:
 
 
 def build_player_registry(info: dict) -> dict[str, str]:
+    # YAML registry maps player name → cricsheet identifier hash
+    identifier_map: dict[str, str] = info.get('registry', {}).get('people', {})
     registry: dict[str, str] = {}
     for team_players in info.get('players', {}).values():
         for name in team_players:
-            registry[name] = upsert_player(name)
+            cricsheet_id = identifier_map.get(name)
+            registry[name] = upsert_player(name, cricsheet_id)
     return registry
 
 
