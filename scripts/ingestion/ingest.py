@@ -431,7 +431,11 @@ def main():
         run_competition(key)
 
     print('\nRefreshing materialized view...')
-    sb.rpc('refresh_venue_phase_stats', {}).execute()
+    try:
+        sb.rpc('refresh_venue_phase_stats', {}).execute()
+        print('Materialized view refreshed.')
+    except Exception as e:
+        print(f'  Warning: could not refresh materialized view ({e}). Run manually if needed.')
     print('All done.')
 
 
