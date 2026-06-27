@@ -11,6 +11,7 @@ const nav = [
   { href: '/matches', label: 'Matches', icon: '📋' },
   { href: '/phases', label: 'Phase Analysis', icon: '📊' },
   { href: '/analysis', label: 'Match Analysis', icon: '🔍' },
+  { href: '/strategy', label: 'Strategy', icon: '🎯' },
 ]
 
 export default function Sidebar() {
