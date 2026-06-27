@@ -430,12 +430,12 @@ def main():
     for key in targets:
         run_competition(key)
 
-    print('\nRefreshing materialized view...')
+    print('\nRefreshing materialized views...')
     try:
-        sb.rpc('refresh_venue_phase_stats', {}).execute()
-        print('Materialized view refreshed.')
+        sb.rpc('refresh_strategy_views', {}).execute()
+        print('Materialized views refreshed.')
     except Exception as e:
-        print(f'  Warning: could not refresh materialized view ({e}). Run manually if needed.')
+        print(f'  Warning: could not refresh materialized views ({e}). Run manually if needed.')
     print('All done.')
 
 
