@@ -37,11 +37,17 @@ type BowlerStat = {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-const PHASES = ['POWERPLAY', 'MIDDLE', 'DEATH'] as const
-const PHASE_LABEL: Record<string, string> = { POWERPLAY: 'Powerplay (0-5)', MIDDLE: 'Middle (6-14)', DEATH: 'Death (15-19)' }
+const PHASES = ['POWERPLAY', 'MIDDLE', 'ACCELERATE', 'DEATH'] as const
+const PHASE_LABEL: Record<string, string> = {
+  POWERPLAY: 'Powerplay (1-6)',
+  MIDDLE: 'Middle (7-12)',
+  ACCELERATE: 'Acceleration (13-16)',
+  DEATH: 'Death (17-20)',
+}
 const PHASE_COLOR: Record<string, string> = {
   POWERPLAY: 'var(--accent-blue)',
   MIDDLE: 'var(--accent-amber)',
+  ACCELERATE: 'var(--accent-purple)',
   DEATH: 'var(--accent-red)',
 }
 

@@ -118,10 +118,12 @@ VENUE_ALIASES: dict[str, str] = {
 
 def phase_for_over(over: int) -> str:
     if over < 6:
-        return 'POWERPLAY'
-    elif over < 15:
-        return 'MIDDLE'
-    return 'DEATH'
+        return 'POWERPLAY'   # overs 1-6
+    elif over < 12:
+        return 'MIDDLE'      # overs 7-12
+    elif over < 16:
+        return 'ACCELERATE'  # overs 13-16
+    return 'DEATH'           # overs 17-20
 
 
 def normalise_venue(raw: str) -> str:
